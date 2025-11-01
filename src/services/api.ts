@@ -518,7 +518,7 @@ class ApiService {
   public async getCurrentGoldPrice(): Promise<CurrentGoldPriceResponse> {
     try {
       // This is an external API, so we'll use fetch directly without auth
-      const response = await fetch('https://7bb3rgsz-4001.inc1.devtunnels.ms/api/v1/gold/current');
+      const response = await fetch('https://tradingapi.utpfund.live/api/v1/gold/current');
       const data = await response.json();
       return data;
     } catch (error) {
