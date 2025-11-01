@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Wallet, Eye, EyeOff, Mail, Lock, ArrowRight, User, Phone, UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginRequest, SignupRequest } from '../types/api';
 
 interface LoginFormProps {
   onLogin: () => void;
+  isSignupMode?: boolean;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isSignupMode: propIsSignupMode = false }) => {
   const { login, signup, validateReferralCode, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
   
   // Form state
-  const [isSignupMode, setIsSignupMode] = useState(false);
+  const [isSignupMode, setIsSignupMode] = useState(propIsSignupMode);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -47,6 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     try {
       await login(loginData);
       onLogin();
+      navigate('/dashboard');
     } catch (error) {
       // Error is handled by the auth context
     }
@@ -72,6 +76,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     try {
       await signup(signupData);
       onLogin();
+      navigate('/dashboard');
     } catch (error) {
       // Error is handled by the auth context
     }
@@ -485,13 +490,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               {isSignupMode ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button 
                 onClick={() => {
-                  setIsSignupMode(!isSignupMode);
-                  setLocalError(null);
-                  clearError();
-                  setReferralValidated(false);
-                  setReferralInfo(null);
-                  setAdminReferralValidated(false);
-                  setAdminReferralInfo(null);
+                  if (isSignupMode) {
+                    navigate('/login');
+                  } else {
+                    navigate('/signup');
+                  }
                 }}
                 className="text-blue-600 hover:text-blue-500 font-medium"
               >

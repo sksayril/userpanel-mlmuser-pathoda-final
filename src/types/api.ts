@@ -547,3 +547,57 @@ export interface DashboardResponse {
   recentActivity: RecentActivity;
   performance: Performance;
 }
+
+// Referral Link API Types
+export interface ReferralLinkResponse {
+  referralLink: string;
+  shareableText: string;
+  qrCodeData: string;
+}
+
+export interface ReferralLinkApiResponse {
+  success: boolean;
+  data: ReferralLinkResponse;
+}
+
+// Admin Status API Types
+export interface AdminStatusUser {
+  id: string;
+  name: string;
+  email: string;
+  referralCode: string;
+}
+
+export interface AdminStatusAdminDetails {
+  id: string;
+  name: string;
+  email: string;
+  referralCode: string;
+}
+
+export interface AdminStatusCreatedBy {
+  id: string;
+  name: string;
+  email: string;
+  referralCode: string;
+}
+
+export interface AdminStatusAdminRecord {
+  id: string;
+  createdBy: AdminStatusCreatedBy;
+}
+
+export interface AdminStatusResponse {
+  user: AdminStatusUser;
+  adminId: string;
+  adminDetails: AdminStatusAdminDetails;
+  adminRecord: AdminStatusAdminRecord;
+  isAssignedToAdmin: boolean;
+  needsFix: boolean;
+}
+
+export interface AdminStatusApiResponse {
+  success: boolean;
+  message: string;
+  data: AdminStatusResponse;
+}

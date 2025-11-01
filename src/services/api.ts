@@ -21,7 +21,9 @@ import {
   ReferralHierarchyResponse,
   DownlineUsersResponse,
   DownlineUsersParams,
-  DashboardResponse
+  DashboardResponse,
+  ReferralLinkResponse,
+  AdminStatusResponse
 } from '../types/api';
 
 import { API_CONFIG } from '../config/api';
@@ -344,6 +346,30 @@ class ApiService {
   public async getDashboard(): Promise<DashboardResponse> {
     const response = await this.request<DashboardResponse>(
       '/users/dashboard',
+      {
+        method: 'GET',
+      }
+    );
+
+    return response.data!;
+  }
+
+  // Referral Link API Method
+  public async getReferralLink(): Promise<ReferralLinkResponse> {
+    const response = await this.request<ReferralLinkResponse>(
+      '/users/referral-link',
+      {
+        method: 'GET',
+      }
+    );
+
+    return response.data!;
+  }
+
+  // Admin Status API Method
+  public async getAdminStatus(): Promise<AdminStatusResponse> {
+    const response = await this.request<AdminStatusResponse>(
+      '/users/admin-status',
       {
         method: 'GET',
       }

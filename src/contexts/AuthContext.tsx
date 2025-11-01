@@ -91,6 +91,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     apiService.logout();
     setUser(null);
     setError(null);
+    // Redirect to login page after logout
+    window.location.href = '/login';
   };
 
   const clearError = () => {

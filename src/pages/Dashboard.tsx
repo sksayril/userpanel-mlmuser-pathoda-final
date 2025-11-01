@@ -235,7 +235,7 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {dashboardData.user.firstName}! 👋
+            Welcome back, {dashboardData.user?.firstName || 'User'}! 👋
         </h1>
           <p className="text-gray-600">Here's your comprehensive dashboard overview.</p>
         </div>
@@ -265,7 +265,7 @@ const Dashboard: React.FC = () => {
           </div>
           <h3 className="text-sm font-medium opacity-90 mb-1">Main Wallet</h3>
           <p className="text-2xl font-bold">
-            {showBalances ? dashboardData.wallets.mainWallet.formatted : '••••••'}
+            {showBalances ? (dashboardData.wallets?.mainWallet?.formatted || 'N/A') : '••••••'}
           </p>
         </div>
 
@@ -283,7 +283,7 @@ const Dashboard: React.FC = () => {
           </div>
           <h3 className="text-sm font-medium opacity-90 mb-1">Benefit Wallet</h3>
           <p className="text-2xl font-bold">
-            {showBalances ? dashboardData.wallets.benefitWallet.formatted : '••••••'}
+            {showBalances ? (dashboardData.wallets?.benefitWallet?.formatted || 'N/A') : '••••••'}
           </p>
         </div>
 
@@ -301,7 +301,7 @@ const Dashboard: React.FC = () => {
           </div>
           <h3 className="text-sm font-medium opacity-90 mb-1">Withdrawal Wallet</h3>
           <p className="text-2xl font-bold">
-            {showBalances ? dashboardData.wallets.withdrawalWallet.formatted : '••••••'}
+            {showBalances ? (dashboardData.wallets?.withdrawalWallet?.formatted || 'N/A') : '••••••'}
           </p>
         </div>
 
@@ -319,7 +319,7 @@ const Dashboard: React.FC = () => {
           </div>
           <h3 className="text-sm font-medium opacity-90 mb-1">Total Balance</h3>
           <p className="text-2xl font-bold">
-            {showBalances ? dashboardData.wallets.totalBalance.formatted : '••••••'}
+            {showBalances ? (dashboardData.wallets?.totalBalance?.formatted || 'N/A') : '••••••'}
           </p>
         </div>
       </div>
@@ -331,7 +331,7 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-gray-600 text-sm font-medium">Total Earnings</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(dashboardData.statistics.totalEarnings)}
+                {formatCurrency(dashboardData.statistics?.totalEarnings || 0)}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-green-100">
@@ -345,7 +345,7 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-gray-600 text-sm font-medium">Monthly Earnings</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(dashboardData.statistics.monthlyEarnings)}
+                {formatCurrency(dashboardData.statistics?.monthlyEarnings || 0)}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-blue-100">
@@ -359,7 +359,7 @@ const Dashboard: React.FC = () => {
             <div>
               <p className="text-gray-600 text-sm font-medium">Total Referrals</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {dashboardData.statistics.totalReferrals}
+                {dashboardData.statistics?.totalReferrals || 0}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-purple-100">
@@ -373,7 +373,7 @@ const Dashboard: React.FC = () => {
                 <div>
               <p className="text-gray-600 text-sm font-medium">Total Commissions</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(dashboardData.statistics.totalCommissions)}
+                {formatCurrency(dashboardData.statistics?.totalCommissions || 0)}
               </p>
             </div>
             <div className="p-3 rounded-xl bg-orange-100">
@@ -436,7 +436,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Transactions</h3>
           <div className="space-y-4">
-            {dashboardData.recentActivity.transactions.slice(0, 5).map((transaction) => (
+            {dashboardData.recentActivity?.transactions?.length > 0 ? (
+              dashboardData.recentActivity.transactions.slice(0, 5).map((transaction) => (
               <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${
@@ -461,7 +462,13 @@ const Dashboard: React.FC = () => {
                   {transaction.formattedAmount}
                 </span>
               </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <CreditCard className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>No recent transactions found</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -469,7 +476,8 @@ const Dashboard: React.FC = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Commissions</h3>
           <div className="space-y-4">
-            {dashboardData.recentActivity.commissions.slice(0, 5).map((commission) => (
+            {dashboardData.recentActivity?.commissions?.length > 0 ? (
+              dashboardData.recentActivity.commissions.slice(0, 5).map((commission) => (
               <div key={commission.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -477,7 +485,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-gray-900 font-medium text-sm">
-                      Level {commission.level} from {commission.fromUser.firstName} {commission.fromUser.lastName}
+                      Level {commission.level} from {commission.fromUser ? `${commission.fromUser.firstName} ${commission.fromUser.lastName}` : 'Unknown User'}
                     </p>
                     <p className="text-gray-500 text-xs">{formatDate(commission.createdAt)}</p>
                   </div>
@@ -486,7 +494,13 @@ const Dashboard: React.FC = () => {
                   {formatCurrency(commission.commissionAmount)}
                 </span>
               </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <UserCheck className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>No recent commissions found</p>
+              </div>
+            )}
               </div>
             </div>
       </div>

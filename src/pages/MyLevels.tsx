@@ -14,9 +14,11 @@ import {
   UserCheck,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Link
 } from 'lucide-react';
 import { apiService } from '../services/api';
+import ReferralLinkCard from '../components/ReferralLinkCard';
 import {
   CommissionStructureResponse,
   CommissionSummaryResponse,
@@ -38,7 +40,7 @@ import {
 } from '../types/api';
 
 const MyLevels: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'structure' | 'history' | 'network' | 'downline'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'structure' | 'history' | 'network' | 'downline' | 'referral'>('overview');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -100,6 +102,9 @@ const MyLevels: React.FC = () => {
             loadDownlineReport(),
             loadDownlineUsers()
           ]);
+          break;
+        case 'referral':
+          // Referral link data is loaded by the ReferralLinkCard component
           break;
       }
     } catch (err) {
@@ -198,7 +203,8 @@ const MyLevels: React.FC = () => {
     { id: 'structure', label: 'Commission Structure', icon: Layers },
     { id: 'history', label: 'Commission History', icon: Calendar },
     { id: 'network', label: 'Network Tree', icon: Network },
-    { id: 'downline', label: 'Downline Report', icon: Users }
+    { id: 'downline', label: 'Downline Report', icon: Users },
+    { id: 'referral', label: 'Referral Link', icon: Link }
   ];
 
   return (
@@ -378,7 +384,7 @@ const MyLevels: React.FC = () => {
                 <div className="bg-white rounded-xl shadow-sm p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Commissions</h3>
                   <div className="space-y-3">
-                    {commissionSummary.recentCommissions.map((commission: RecentCommission) => (
+                    {commissionSummary.recentCommissions?.map((commission: RecentCommission) => (
                       <div key={commission.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-blue-100 rounded-lg">
@@ -389,7 +395,7 @@ const MyLevels: React.FC = () => {
                               Level {commission.level} Commission
                             </p>
                             <p className="text-sm text-gray-600">
-                              From {commission.fromUser.firstName} {commission.fromUser.lastName}
+                              From {commission.fromUser ? `${commission.fromUser.firstName} ${commission.fromUser.lastName}` : 'Unknown User'}
                             </p>
                           </div>
                         </div>
@@ -693,7 +699,7 @@ const MyLevels: React.FC = () => {
                   <div className="bg-white rounded-xl shadow-sm">
                     <div className="p-6">
                       <div className="space-y-4">
-                        {commissionHistory.commissions.map((commission: CommissionHistoryItem) => (
+                        {commissionHistory.commissions?.map((commission: CommissionHistoryItem) => (
                           <div key={commission.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
@@ -705,7 +711,7 @@ const MyLevels: React.FC = () => {
                                     Level {commission.level} Commission
                                   </p>
                                   <p className="text-sm text-gray-600">
-                                    From {commission.fromUser.name} ({commission.fromUser.referralCode})
+                                    From {commission.fromUser ? `${commission.fromUser.name} (${commission.fromUser.referralCode})` : 'Unknown User'}
                                   </p>
                                   <p className="text-sm text-gray-500">
                                     Deposit: {commission.formattedDepositAmount}
@@ -769,10 +775,10 @@ const MyLevels: React.FC = () => {
                   <div className="bg-white rounded-xl shadow-sm p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Referral Hierarchy (Upline)</h3>
                     <div className="space-y-4">
-                      {referralHierarchy.hierarchy.map((member: ReferralHierarchyItem, index: number) => (
+                      {referralHierarchy.hierarchy?.map((member: ReferralHierarchyItem, index: number) => (
                         <div key={member.userId} className="relative">
                           {/* Connection line */}
-                          {index < referralHierarchy.hierarchy.length - 1 && (
+                          {index < (referralHierarchy.hierarchy?.length || 0) - 1 && (
                             <div className="absolute left-6 top-full w-0.5 h-4 bg-gradient-to-b from-blue-400 to-gray-300"></div>
                           )}
                           
@@ -788,10 +794,10 @@ const MyLevels: React.FC = () => {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">
-                                  Level {member.level}: {member.firstName} {member.lastName}
+                                  Level {member.level}: {member.firstName || 'Unknown'} {member.lastName || 'User'}
                                 </p>
                                 <p className="text-sm text-gray-600">
-                                  {member.email} • {member.referralCode}
+                                  {member.email || 'No email'} • {member.referralCode || 'No code'}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                   {member.totalReferrals} referrals • {formatCurrency(member.totalCommissionsEarned)} earned
@@ -874,7 +880,7 @@ const MyLevels: React.FC = () => {
                   <div className="bg-white rounded-xl shadow-sm p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Downline by Level</h3>
                     <div className="space-y-4">
-                      {downlineReport.byLevel.map((level: DownlineLevel, index: number) => {
+                      {downlineReport.byLevel?.map((level: DownlineLevel, index: number) => {
                         const getLevelColor = (levelNum: number) => {
                           if (levelNum === 1) return 'from-blue-600 to-purple-600';
                           if (levelNum === 2) return 'from-green-500 to-blue-500';
@@ -886,7 +892,7 @@ const MyLevels: React.FC = () => {
                         return (
                           <div key={level.level} className="relative">
                             {/* Connection line to next level */}
-                            {index < downlineReport.byLevel.length - 1 && (
+                            {index < (downlineReport.byLevel?.length || 0) - 1 && (
                               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gradient-to-b from-gray-300 to-transparent"></div>
                             )}
                             
@@ -916,10 +922,10 @@ const MyLevels: React.FC = () => {
                               {expandedLevels.has(level.level) && (
                                 <div className="border-t border-gray-200 p-4 bg-gray-50">
                                   <div className="space-y-3">
-                                    {level.users.map((user: DownlineUser, userIndex: number) => (
+                                    {level.users?.map((user: DownlineUser, userIndex: number) => (
                                       <div key={user.userId} className="relative">
                                         {/* Connection line between users */}
-                                        {userIndex < level.users.length - 1 && (
+                                        {userIndex < (level.users?.length || 0) - 1 && (
                                           <div className="absolute -bottom-1.5 left-6 w-0.5 h-3 bg-gray-300"></div>
                                         )}
                                         
@@ -930,10 +936,10 @@ const MyLevels: React.FC = () => {
                                             </div>
                                             <div>
                                               <p className="font-medium text-gray-900">
-                                                {user.firstName} {user.lastName}
+                                                {user.firstName || 'Unknown'} {user.lastName || 'User'}
                                               </p>
                                               <p className="text-sm text-gray-600">
-                                                {user.email} • {user.referralCode}
+                                                {user.email || 'No email'} • {user.referralCode || 'No code'}
                                               </p>
                                               <p className="text-sm text-gray-500">
                                                 Joined: {formatDate(user.joinedAt)}
@@ -961,6 +967,145 @@ const MyLevels: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Referral Link Tab */}
+            {activeTab === 'referral' && (
+              <div className="space-y-6">
+                <ReferralLinkCard />
+                
+                {/* Additional Referral Information */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* How It Works */}
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-blue-600" />
+                      How Referral Commissions Work
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-semibold text-blue-600">1</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">Share Your Link</p>
+                          <p className="text-sm text-gray-600">Share your unique referral link with friends and family</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-semibold text-green-600">2</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">They Sign Up</p>
+                          <p className="text-sm text-gray-600">When someone uses your link to create an account</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-semibold text-purple-600">3</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">Earn Commissions</p>
+                          <p className="text-sm text-gray-600">You earn commissions from their deposits and activities</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Commission Levels */}
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-600" />
+                      Commission Levels
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <span className="font-medium text-gray-900">Level 1 (Direct)</span>
+                        <span className="text-lg font-bold text-blue-600">4.00%</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <span className="font-medium text-gray-900">Level 2 (Secondary)</span>
+                        <span className="text-lg font-bold text-green-600">2.00%</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                        <span className="font-medium text-gray-900">Level 3 (Tertiary)</span>
+                        <span className="text-lg font-bold text-yellow-600">1.00%</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                        <span className="font-medium text-gray-900">Levels 5-20</span>
+                        <span className="text-lg font-bold text-purple-600">0.25%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Admin Status Information */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-blue-600" />
+                    Admin Assignment Information
+                  </h3>
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <p className="text-sm text-blue-800 mb-3">
+                      <strong>Important:</strong> Your referral link includes both your user referral code and your assigned admin's referral code. 
+                      This ensures proper commission tracking and admin assignment for new signups.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <h4 className="font-medium text-blue-900 mb-2">Your Referral Code</h4>
+                        <p className="text-blue-700">Used to track direct referrals and earn Level 1 commissions</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-blue-900 mb-2">Admin Referral Code</h4>
+                        <p className="text-blue-700">Ensures proper admin assignment and commission structure</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tips for Success */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-blue-600" />
+                    Tips for Referral Success
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900">Social Media</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Post on Facebook, Twitter, Instagram</li>
+                        <li>• Share in relevant groups and communities</li>
+                        <li>• Use engaging content and visuals</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900">Personal Network</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Reach out to friends and family</li>
+                        <li>• Send personalized messages</li>
+                        <li>• Explain the benefits clearly</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900">Professional</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Add to email signature</li>
+                        <li>• Include in business cards</li>
+                        <li>• Mention in professional networks</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900">Offline</h4>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• Use QR codes for easy sharing</li>
+                        <li>• Print and distribute flyers</li>
+                        <li>• Word-of-mouth recommendations</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </>
@@ -1003,10 +1148,10 @@ const MyLevels: React.FC = () => {
               </div>
               <div className="flex-1">
                 <p className="font-medium text-white">
-                  {node.firstName} {node.lastName}
+                  {node.firstName || 'Unknown'} {node.lastName || 'User'}
                 </p>
                 <p className="text-sm opacity-90">
-                  {node.email} • {node.referralCode}
+                  {node.email || 'No email'} • {node.referralCode || 'No code'}
                 </p>
                 <p className="text-sm opacity-75">
                   Level {node.level} • {node.totalReferrals} referrals • {formatCurrency(node.totalCommissionsEarned)} earned
@@ -1026,7 +1171,7 @@ const MyLevels: React.FC = () => {
             <div className="absolute left-6 top-0 w-0.5 h-full bg-gradient-to-b from-gray-300 to-transparent"></div>
             
             <div className="ml-8">
-              {node.children.map((child: NetworkTreeNode) => (
+              {node.children?.map((child: NetworkTreeNode) => (
                 <div key={child.id} className="relative">
                   {/* Horizontal connection line */}
                   <div className="absolute -left-8 top-6 w-8 h-0.5 bg-gradient-to-r from-gray-300 to-transparent"></div>
