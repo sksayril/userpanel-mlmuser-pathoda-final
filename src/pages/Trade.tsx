@@ -19,29 +19,7 @@ import {
   CurrentGoldPrice
 } from '../types/api';
 import TransferToTrading from '../components/TransferToTrading';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import TradingViewGoldChart from '../components/TradingViewGoldChart';
 
 type TabType = 'gold' | 'history' | 'profit-loss' | 'holdings';
 
@@ -56,14 +34,6 @@ const Trade: React.FC = () => {
   
   // Live Gold Price states
   const [currentGoldPrice, setCurrentGoldPrice] = useState<CurrentGoldPrice | null>(null);
-  const [priceHistory, setPriceHistory] = useState<Array<{
-    time: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    price: number;
-  }>>([]);
   const [priceError, setPriceError] = useState<string | null>(null);
   const [useLivePrice, setUseLivePrice] = useState(true);
   
@@ -101,40 +71,6 @@ const Trade: React.FC = () => {
           setCurrentGoldPrice(response.data);
           setPriceError(null);
           
-          // Update price history for candlestick chart (keep last 50 data points)
-          setPriceHistory(prev => {
-            const now = new Date().toISOString();
-            const currentMinute = Math.floor(Date.now() / 60000); // Group by minute
-            
-            // Get the last entry
-            const lastEntry = prev[prev.length - 1];
-            
-            if (lastEntry && Math.floor(new Date(lastEntry.time).getTime() / 60000) === currentMinute) {
-              // Update existing minute entry
-              const updatedEntry = {
-                ...lastEntry,
-                high: Math.max(lastEntry.high, response.data.price),
-                low: Math.min(lastEntry.low, response.data.price),
-                close: response.data.price,
-                price: response.data.price,
-              };
-              return [...prev.slice(0, -1), updatedEntry];
-            } else {
-              // Create new minute entry
-              const newEntry = {
-                time: now,
-                open: response.data.price,
-                high: response.data.price,
-                low: response.data.price,
-                close: response.data.price,
-                price: response.data.price,
-              };
-              const updated = [...prev, newEntry];
-              // Keep only last 50 entries
-              return updated.slice(-50);
-            }
-          });
-
           // Auto-update gold price in form if useLivePrice is enabled
           if (useLivePrice) {
             setGoldPrice(response.data.price.toFixed(2));
@@ -379,71 +315,26 @@ const Trade: React.FC = () => {
         </div>
       )}
 
-      {/* Candlestick Chart */}
-      {priceHistory.length > 0 && (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Live Price Chart</h3>
-          <div className="h-64">
-            <Line
-              data={{
-                labels: priceHistory.map((_, index) => {
-                  const date = new Date(priceHistory[index].time);
-                  return date.toLocaleTimeString();
-                }),
-                datasets: [
-                  {
-                    label: 'Price',
-                    data: priceHistory.map(p => p.price),
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.1,
-                    fill: true,
-                  },
-                  {
-                    label: 'High',
-                    data: priceHistory.map(p => p.high),
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'transparent',
-                    borderDash: [5, 5],
-                    pointRadius: 0,
-                  },
-                  {
-                    label: 'Low',
-                    data: priceHistory.map(p => p.low),
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'transparent',
-                    borderDash: [5, 5],
-                    pointRadius: 0,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    display: true,
-                    position: 'top' as const,
-                  },
-                  tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                  },
-                },
-                scales: {
-                  y: {
-                    beginAtZero: false,
-                    title: {
-                      display: true,
-                      text: 'Price (USD)',
-                    },
-                  },
-                },
-              }}
-            />
-          </div>
+      {/* TradingView Live Gold Chart */}
+      <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+          <h3 className="text-lg font-semibold text-gray-900">Live Gold Chart (XAUUSD)</h3>
+          <a 
+            href="https://in.tradingview.com/chart/?symbol=OANDA%3AXAUUSD" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+          >
+            Open Full Chart
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
         </div>
-      )}
+        <div className="rounded-lg overflow-hidden border border-gray-200 w-full" style={{ minWidth: 0 }}>
+          <TradingViewGoldChart height={600} />
+        </div>
+      </div>
 
       {/* Trading Wallet Balance */}
       {dashboardData && (
