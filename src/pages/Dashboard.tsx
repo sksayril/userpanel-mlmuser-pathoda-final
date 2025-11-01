@@ -18,7 +18,8 @@ import {
   EyeOff
 } from 'lucide-react';
 import { apiService } from '../services/api';
-import { DashboardResponse } from '../types/api';
+import { DashboardResponse, TransferToTradingResponse } from '../types/api';
+import TransferToTrading from '../components/TransferToTrading';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -51,6 +52,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showBalances, setShowBalances] = useState(true);
+  const [showTransferModal, setShowTransferModal] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -67,6 +69,11 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTransferSuccess = (response: TransferToTradingResponse) => {
+    // Reload dashboard data to update wallet balances
+    loadDashboardData();
   };
 
   const formatCurrency = (amount: number) => {
@@ -250,7 +257,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Wallet Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
@@ -305,6 +312,24 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
 
+        <div className="bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-600 text-white rounded-xl p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <button
+              onClick={() => setShowBalances(!showBalances)}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+            >
+              {showBalances ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+          </div>
+          <h3 className="text-sm font-medium opacity-90 mb-1">Trading Wallet</h3>
+          <p className="text-2xl font-bold">
+            {showBalances ? (dashboardData.wallets?.tradingWallet?.formatted || '$0.00') : '••••••'}
+          </p>
+        </div>
+
         <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
@@ -323,6 +348,18 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Transfer to Trading Wallet Section */}
+      {dashboardData && (
+        <div className="mb-6">
+          <TransferToTrading
+            mainWalletBalance={dashboardData.wallets.mainWallet.amount}
+            benefitWalletBalance={dashboardData.wallets.benefitWallet.amount}
+            tradingWalletBalance={dashboardData.wallets.tradingWallet?.amount || 0}
+            onTransferSuccess={handleTransferSuccess}
+          />
+        </div>
+      )}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

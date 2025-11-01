@@ -23,7 +23,20 @@ import {
   DownlineUsersParams,
   DashboardResponse,
   ReferralLinkResponse,
-  AdminStatusResponse
+  AdminStatusResponse,
+  MlmChainResponse,
+  MlmChainParams,
+  TransferToTradingRequest,
+  TransferToTradingResponse,
+  BuyGoldRequest,
+  BuyGoldResponse,
+  SellGoldRequest,
+  SellGoldResponse,
+  GoldTradingHistoryParams,
+  GoldTradingHistoryResponse,
+  ProfitLossSummaryResponse,
+  GoldHoldingsResponse,
+  CurrentGoldPriceResponse
 } from '../types/api';
 
 import { API_CONFIG } from '../config/api';
@@ -129,7 +142,14 @@ class ApiService {
           this.clearToken();
           throw new Error('Authentication failed. Please login again.');
         }
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        // Create error with response data attached
+        const error: any = new Error(data.message || `HTTP error! status: ${response.status}`);
+        error.response = {
+          status: response.status,
+          data: data,
+          message: data.message,
+        };
+        throw error;
       }
 
       return data;
@@ -376,6 +396,135 @@ class ApiService {
     );
 
     return response.data!;
+  }
+
+  // MLM Chain API Method
+  public async getMlmChain(
+    params: MlmChainParams = {}
+  ): Promise<MlmChainResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params.referralCode) queryParams.append('referralCode', params.referralCode);
+    if (params.maxLevel) queryParams.append('maxLevel', params.maxLevel.toString());
+
+    const endpoint = `/users/mlm/chain${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    const response = await this.request<MlmChainResponse>(
+      endpoint,
+      {
+        method: 'GET',
+      }
+    );
+
+    return response.data!;
+  }
+
+  // Wallet Transfer API Method
+  public async transferToTradingWallet(
+    transferData: TransferToTradingRequest
+  ): Promise<TransferToTradingResponse> {
+    const response = await this.request<TransferToTradingResponse>(
+      '/users/wallet/transfer-to-trading',
+      {
+        method: 'POST',
+        body: JSON.stringify(transferData),
+      }
+    );
+
+    return response.data!;
+  }
+
+  // Gold Trading API Methods
+  public async buyGold(buyData: BuyGoldRequest): Promise<BuyGoldResponse> {
+    const response = await this.request<BuyGoldResponse>(
+      '/users/trading/gold/buy',
+      {
+        method: 'POST',
+        body: JSON.stringify(buyData),
+      }
+    );
+
+    return response.data!;
+  }
+
+  public async sellGold(sellData: SellGoldRequest): Promise<SellGoldResponse> {
+    const response = await this.request<SellGoldResponse>(
+      '/users/trading/gold/sell',
+      {
+        method: 'POST',
+        body: JSON.stringify(sellData),
+      }
+    );
+
+    return response.data!;
+  }
+
+  public async getGoldTradingHistory(
+    params: GoldTradingHistoryParams = {}
+  ): Promise<GoldTradingHistoryResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.tradeType) queryParams.append('tradeType', params.tradeType);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+
+    const endpoint = `/users/trading/gold/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    const response = await this.request<GoldTradingHistoryResponse>(
+      endpoint,
+      {
+        method: 'GET',
+      }
+    );
+
+    return response.data!;
+  }
+
+  public async getGoldProfitLossSummary(
+    startDate?: string,
+    endDate?: string
+  ): Promise<ProfitLossSummaryResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+
+    const endpoint = `/users/trading/gold/profit-loss${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    const response = await this.request<ProfitLossSummaryResponse>(
+      endpoint,
+      {
+        method: 'GET',
+      }
+    );
+
+    return response.data!;
+  }
+
+  public async getGoldHoldings(): Promise<GoldHoldingsResponse> {
+    const response = await this.request<GoldHoldingsResponse>(
+      '/users/trading/gold/holdings',
+      {
+        method: 'GET',
+      }
+    );
+
+    return response.data!;
+  }
+
+  // Live Gold Price API Method (External API - no auth required)
+  public async getCurrentGoldPrice(): Promise<CurrentGoldPriceResponse> {
+    try {
+      // This is an external API, so we'll use fetch directly without auth
+      const response = await fetch('https://7bb3rgsz-4001.inc1.devtunnels.ms/api/v1/gold/current');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching current gold price:', error);
+      throw error;
+    }
   }
 
   // Generic API methods for future use

@@ -18,6 +18,7 @@ export interface User {
     mainWallet: number;
     benefitWallet: number;
     withdrawalWallet: number;
+    tradingWallet?: number;
   };
   totalReferrals?: number;
 }
@@ -372,6 +373,7 @@ export interface DashboardWallets {
   mainWallet: WalletBalance;
   benefitWallet: WalletBalance;
   withdrawalWallet: WalletBalance;
+  tradingWallet?: WalletBalance;
   totalBalance: WalletBalance;
 }
 
@@ -600,4 +602,340 @@ export interface AdminStatusApiResponse {
   success: boolean;
   message: string;
   data: AdminStatusResponse;
+}
+
+// MLM Chain Types
+export interface ChainUser {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  referralCode: string;
+  referralLevel?: number;
+  level?: number;
+  position?: string;
+  totalReferrals: number;
+  totalCommissionsEarned: number;
+  directReferralsCount?: number;
+  wallets?: {
+    mainWallet: number;
+    benefitWallet: number;
+    withdrawalWallet: number;
+  };
+  joinedAt: string;
+  referredBy?: string;
+  children?: ChainUser[];
+  childrenCount?: number;
+}
+
+export interface ChainDownlineUser extends ChainUser {
+  level: number;
+}
+
+export interface UsersByLevel {
+  [key: string]: {
+    level: number;
+    count: number;
+    totalCommissions: number;
+    totalReferrals: number;
+  };
+}
+
+export interface DownlineStatistics {
+  totalDownlineUsers: number;
+  directReferrals: number;
+  totalDownlineCommissions: number;
+  totalDownlineReferrals: number;
+  usersByLevel: UsersByLevel;
+}
+
+export interface DownlineTree {
+  tree: ChainUser[];
+  flatList: ChainDownlineUser[];
+  statistics: DownlineStatistics;
+}
+
+export interface UplineUser {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  referralCode: string;
+  level: number;
+  position: string;
+  totalReferrals: number;
+  totalCommissionsEarned: number;
+}
+
+export interface ChainInfo {
+  maxLevel: number;
+  totalLevels: number;
+  hasUpline: boolean;
+  hasDownline: boolean;
+}
+
+export interface MlmChainResponse {
+  currentUser: ChainUser;
+  upline: UplineUser[];
+  downline: DownlineTree;
+  chainInfo: ChainInfo;
+}
+
+export interface MlmChainParams {
+  referralCode?: string;
+  maxLevel?: number;
+}
+
+// Wallet Transfer Types
+export interface WalletBalanceWithChange extends WalletBalance {
+  change?: number;
+  formattedChange?: string;
+}
+
+export interface TransferToTradingRequest {
+  amount: number;
+}
+
+export interface TransferToTradingWallets {
+  mainWallet: WalletBalanceWithChange;
+  tradingWallet: WalletBalanceWithChange;
+  benefitWallet: WalletBalanceWithChange;
+  withdrawalWallet: WalletBalance;
+}
+
+export interface TransferDetails {
+  transferredAmount: number;
+  formattedTransferredAmount: string;
+  benefitDeduction: number;
+  formattedBenefitDeduction: string;
+  deductionMultiplier: number;
+}
+
+export interface TransferToTradingResponse {
+  wallets: TransferToTradingWallets;
+  transferDetails: TransferDetails;
+}
+
+export interface TransferToTradingError {
+  required?: number;
+  available?: number;
+  shortfall?: number;
+}
+
+// Gold Trading Types
+export interface BuyGoldRequest {
+  goldAmount: number;
+  goldPrice: number;
+}
+
+export interface SellGoldRequest {
+  goldAmount: number;
+  goldPrice: number;
+  buyPrice?: number;
+  buyTradeId?: string;
+}
+
+export interface GoldTrade {
+  id: string;
+  tradeType: 'buy' | 'sell';
+  goldAmount: number;
+  formattedGoldAmount: string;
+  goldPrice: number;
+  formattedGoldPrice: string;
+  totalAmount: number;
+  formattedTotalAmount: string;
+  buyPrice?: number;
+  formattedBuyPrice?: string;
+  profitLoss?: number;
+  formattedProfitLoss?: string;
+  profitLossPercentage?: number;
+  formattedProfitLossPercentage?: string;
+  tradingWalletBalanceBefore?: number;
+  tradingWalletBalanceAfter?: number;
+  formattedTradingWalletBalance?: string;
+  status: string;
+  description?: string;
+  createdAt: string;
+  formattedDate?: string;
+}
+
+export interface WalletChange {
+  balanceBefore: number;
+  formattedBalanceBefore: string;
+  balanceAfter: number;
+  formattedBalanceAfter: string;
+  change: number;
+  formattedChange: string;
+}
+
+export interface BuyGoldResponse {
+  trade: GoldTrade;
+  wallet: {
+    tradingWallet: WalletChange;
+  };
+}
+
+export interface SellGoldResponse {
+  trade: GoldTrade;
+  wallet: {
+    tradingWallet: WalletChange;
+  };
+}
+
+export interface GoldTradingHistoryParams {
+  page?: number;
+  limit?: number;
+  tradeType?: 'buy' | 'sell';
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface GoldTradingHistoryItem extends GoldTrade {
+  tradingWalletBalanceBefore: number;
+  tradingWalletBalanceAfter: number;
+}
+
+export interface GoldTradingHistoryResponse {
+  trades: GoldTradingHistoryItem[];
+  pagination: {
+    current: number;
+    pages: number;
+    total: number;
+    limit: number;
+  };
+}
+
+export interface TopTrade {
+  id: string;
+  goldAmount: number;
+  formattedGoldAmount: string;
+  buyPrice: number;
+  sellPrice: number;
+  profitLoss: number;
+  formattedProfitLoss: string;
+  profitLossPercentage: number;
+  formattedProfitLossPercentage: string;
+  createdAt: string;
+}
+
+export interface MonthlyProfitLoss {
+  month: string;
+  monthName: string;
+  totalProfitLoss: number;
+  formattedTotalProfitLoss: string;
+  tradeCount: number;
+  totalGoldSold: number;
+  formattedTotalGoldSold: string;
+}
+
+export interface ProfitLossSummary {
+  totalProfitLoss: number;
+  formattedTotalProfitLoss: string;
+  overallProfitLossPercentage: number;
+  formattedOverallProfitLossPercentage: string;
+  totalGoldBought: number;
+  formattedTotalGoldBought: string;
+  totalGoldSold: number;
+  formattedTotalGoldSold: string;
+  totalInvested: number;
+  formattedTotalInvested: string;
+  totalReceived: number;
+  formattedTotalReceived: string;
+  remainingGold: number;
+  formattedRemainingGold: string;
+}
+
+export interface ProfitLossStatistics {
+  totalTrades: number;
+  totalBuyTrades: number;
+  totalSellTrades: number;
+  profitableTrades: number;
+  losingTrades: number;
+  breakEvenTrades: number;
+  winRate: number;
+  formattedWinRate: string;
+  avgProfitLossPerTrade: number;
+  formattedAvgProfitLossPerTrade: string;
+}
+
+export interface ProfitLossSummaryResponse {
+  summary: ProfitLossSummary;
+  statistics: ProfitLossStatistics;
+  topTrades: {
+    mostProfitable: TopTrade[];
+    mostLosing: TopTrade[];
+  };
+  monthlyBreakdown: MonthlyProfitLoss[];
+}
+
+export interface GoldHoldings {
+  totalGoldBought: number;
+  formattedTotalGoldBought: string;
+  totalGoldSold: number;
+  formattedTotalGoldSold: string;
+  currentHoldings: number;
+  formattedCurrentHoldings: string;
+  averageBuyPrice: number;
+  formattedAverageBuyPrice: string;
+  currentGoldPrice: number;
+  formattedCurrentGoldPrice: string;
+  totalInvested: number;
+  formattedTotalInvested: string;
+  currentValue: number;
+  formattedCurrentValue: string;
+  unrealizedProfitLoss: number;
+  formattedUnrealizedProfitLoss: string;
+  unrealizedProfitLossPercentage: number;
+  formattedUnrealizedProfitLossPercentage: string;
+}
+
+export interface RecentBuy {
+  id: string;
+  goldAmount: number;
+  formattedGoldAmount: string;
+  goldPrice: number;
+  formattedGoldPrice: string;
+  totalAmount: number;
+  formattedTotalAmount: string;
+  createdAt: string;
+}
+
+export interface GoldHoldingsResponse {
+  holdings: GoldHoldings;
+  recentBuys: RecentBuy[];
+}
+
+export interface GoldTradingError {
+  required?: number;
+  formattedRequired?: string;
+  available?: number;
+  formattedAvailable?: string;
+  shortfall?: number;
+  formattedShortfall?: string;
+}
+
+// Live Gold Price Types
+export interface CurrentGoldPrice {
+  symbol: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  high: number;
+  low: number;
+  open: number;
+  previousClose: number;
+  volume: number;
+  lastUpdate: string;
+  source: string;
+}
+
+export interface CurrentGoldPriceResponse {
+  success: boolean;
+  data: CurrentGoldPrice;
+  cached: boolean;
 }
